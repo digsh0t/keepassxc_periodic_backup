@@ -18,7 +18,10 @@ func NewCdkStack(scope constructs.Construct, id string, props *CdkStackProps) aw
 	}
 	stack := awscdk.NewStack(scope, &id, &sprops)
 
-	awss3.NewBucket(stack, jsii.String("KeepassXCBackupBucket"), nil)
+	awss3.NewBucket(stack, jsii.String("KeepassXCBackupBucket"), &awss3.BucketProps{
+		BucketName: jsii.String("keepassxc-backup-bucket"),
+		Versioned:  jsii.Bool(true),
+	})
 
 	return stack
 }
