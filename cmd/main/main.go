@@ -15,7 +15,6 @@ func main() {
 		log.Fatalf("ERROR: %s", err)
 		return
 	}
-	fmt.Println(path)
 
 	// TODO: Check if backup file is available and legit
 	isLegit, err := validate.ValidateKeepassXCBackupPath(path)

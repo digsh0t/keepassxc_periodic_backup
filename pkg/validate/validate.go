@@ -1,15 +1,18 @@
 package validate
 
 import (
-	"fmt"
 	"os"
+	"path/filepath"
 )
 
 func ValidateKeepassXCBackupPath(path string) (bool, error) {
-	fi, err := os.Stat(path)
+	_, err := os.Stat(path)
 	if err != nil {
 		return false, err
 	}
-	fmt.Println(fi.Mode())
+	ext := filepath.Ext(path)
+	if ext != ".kdbx" {
+		return false, nil
+	}
 	return true, nil
 }
