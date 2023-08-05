@@ -1,4 +1,4 @@
-name: Example workflow for Golang using Snyk
+name: Snyk IaC scan
 on:
   push:
     branches:
@@ -10,13 +10,23 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - name: Run Snyk to check for vulnerabilities
-        uses: snyk/actions/golang@master
+        id: snyk_scan
+        uses: snyk/actions/iac@master
         continue-on-error: true # To make sure that SARIF upload gets called
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          args: --sarif-file-output=snyk.sarif
+          args: --severity-threshold=high --target-name=keebackup_iac --report
+          command: test
       - name: Upload result to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v2
         with:
           sarif_file: snyk.sarif
+
+      - name: Check on failures
+        if: steps.snyk_scan.outcome != 'success'
+        run: exit 1
+
+      - name: Run random commands
+        run: |
+          echo "xd"
