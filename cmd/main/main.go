@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/digsh0t/keepassxc_periodic_backup/pkg/cliargs"
 	s3module "github.com/digsh0t/keepassxc_periodic_backup/pkg/s3"
+	"github.com/digsh0t/keepassxc_periodic_backup/pkg/terraform"
 	"github.com/digsh0t/keepassxc_periodic_backup/pkg/utils"
 	"github.com/digsh0t/keepassxc_periodic_backup/pkg/validate"
 )
@@ -38,6 +39,8 @@ func main() {
 	if !exists {
 		log.Fatalf("ERROR: %s", "Bucket not existed")
 	}
+
+	terraform.ApplyS3Bucket(bucketName)
 
 	// Initialize new SDK Client
 	sdkConfig, err := config.LoadDefaultConfig(context.TODO())
