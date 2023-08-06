@@ -38,9 +38,12 @@ func ApplyS3Bucket(bucketName string) {
 		log.Fatalf("error running Show: %s", err)
 	}
 
+	// tf.SetEnv(map[string]string{"TF_VAR_bucket_name": bucketName})
+
 	fmt.Println(state.FormatVersion) // "0.1"
 	planConfig := []tfexec.PlanOption{
 		tfexec.Out("./out.txt"),
+		tfexec.Var(fmt.Sprintf("bucket_name=%s", bucketName)),
 	}
 	plan, err := tf.Plan(context.Background(), planConfig...)
 	if err != nil {
