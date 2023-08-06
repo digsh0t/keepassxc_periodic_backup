@@ -85,3 +85,22 @@ func (bucket BucketBasics) GetFileEtag(bucketName string, objectKey string) (str
 	}
 	return *(objectResult.ETag), nil
 }
+
+// func (bucket BucketBasics) keyExists(bucketName string, objectKey string) (bool, error) {
+// 	_, err := bucket.S3Client.HeadObject(&s3.HeadObjectInput{
+// 		Bucket: aws.String(bucketName),
+// 		Key:    aws.String(objectKey),
+// 	})
+// 	if err != nil {
+// 		if aerr, ok := err.(awserr.Error); ok {
+// 			switch aerr.Code() {
+// 			case "NotFound": // s3.ErrCodeNoSuchKey does not work, aws is missing this error code so we hardwire a string
+// 				return false, nil
+// 			default:
+// 				return false, err
+// 			}
+// 		}
+// 		return false, err
+// 	}
+// 	return true, nil
+// }

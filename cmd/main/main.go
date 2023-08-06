@@ -25,34 +25,35 @@ func main() {
 	// Check if backup file is available and legit
 	isLegit, err := validate.ValidateKeepassXCBackupPath(path)
 	if err != nil {
-		log.Fatalf("ERROR: %s", err)
+		log.Fatalf("Failed to validate KeepassXC Backup Path with ERROR: %s", err)
 	}
 	if !isLegit {
 		log.Fatalf("ERROR: %s", "Not a KeepassXC Backup File")
 	}
 
 	// Check if bucket is already existed on S3
-	exists, err := s3module.GetBucket("keepassxc-backup-bucket")
+	exists, err := s3module.GetBucket(bucketName)
 	if err != nil {
-		log.Fatalf("ERROR: %s", err)
+		log.Fatalf("Failed to check bucket existent with ERROR: %s", err)
 	}
 	if !exists {
-		log.Fatalf("ERROR: %s", "Bucket not existed")
+		err = terraform.ApplyS3Bucket(bucketName)
+		if err != nil {
+			log.Fatalf("Failed to create S3 bucket with ERROR: %s", err)
+		}
 	}
-
-	terraform.ApplyS3Bucket(bucketName)
 
 	// Initialize new SDK Client
 	sdkConfig, err := config.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		log.Println("Couldn't load default configuration. Have you set up your AWS account?")
-		log.Fatalf("ERROR: %s", err)
+		log.Fatalf("Failed to load the AWS SDK ERROR: %s", err)
 	}
 
 	// Get local file's MD5 hash
 	hash, err := utils.GetFileMD5Hash(path)
 	if err != nil {
-		log.Fatalf("ERROR: %s", err)
+		log.Fatalf("Failed to get MD5 Hash file of backup file with ERROR: %s", err)
 	}
 	hashString := fmt.Sprintf("%x", hash.Sum(nil))
 
@@ -62,7 +63,7 @@ func main() {
 	// Get S3 object Etag(MD5 hash)
 	etag, err := bucket.GetFileEtag(bucketName, objectName)
 	if err != nil {
-		log.Fatalf("ERROR: %s", err)
+		log.Fatalf("Failed to get file Etag with ERROR: %s", err)
 	}
 
 	// If two hashes equal, return the program
@@ -74,7 +75,7 @@ func main() {
 	// Upload the local file to S3
 	err = bucket.UploadFile(bucketName, objectName, path)
 	if err != nil {
-		log.Fatalf("ERROR: %s", err)
+		log.Fatalf("Failed to upload file to S3 with ERROR: %s", err)
 	}
 	log.Printf("Uploaded %s successfully\n", path)
 }

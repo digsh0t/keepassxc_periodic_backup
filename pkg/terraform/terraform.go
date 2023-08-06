@@ -2,8 +2,8 @@ package terraform
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/hc-install/product"
@@ -11,44 +11,57 @@ import (
 	"github.com/hashicorp/terraform-exec/tfexec"
 )
 
-func ApplyS3Bucket(bucketName string) {
+func ApplyS3Bucket(bucketName string) error {
 	installer := &releases.ExactVersion{
 		Product: product.Terraform,
 		Version: version.Must(version.NewVersion("1.0.6")),
 	}
 
+	tfOutPath := "./tf_out"
+
 	execPath, err := installer.Install(context.Background())
 	if err != nil {
-		log.Fatalf("error installing Terraform: %s", err)
+		return err
 	}
 
 	workingDir := "./terraform/live/services/"
 	tf, err := tfexec.NewTerraform(workingDir, execPath)
 	if err != nil {
-		log.Fatalf("error running NewTerraform: %s", err)
+		return err
 	}
 
 	err = tf.Init(context.Background(), tfexec.Upgrade(true))
 	if err != nil {
-		log.Fatalf("error running Init: %s", err)
+		return err
 	}
 
-	state, err := tf.Show(context.Background())
-	if err != nil {
-		log.Fatalf("error running Show: %s", err)
-	}
-
-	// tf.SetEnv(map[string]string{"TF_VAR_bucket_name": bucketName})
-
-	fmt.Println(state.FormatVersion) // "0.1"
 	planConfig := []tfexec.PlanOption{
-		tfexec.Out("./out.txt"),
+		tfexec.Out(tfOutPath),
 		tfexec.Var(fmt.Sprintf("bucket_name=%s", bucketName)),
 	}
-	plan, err := tf.Plan(context.Background(), planConfig...)
+	_, err = tf.Plan(context.Background(), planConfig...)
 	if err != nil {
-		log.Fatalf("error running Plan: %s", err)
+		return err
 	}
 
-	fmt.Println(plan)
+	planStr, err := tf.ShowPlanFile(context.Background(), tfOutPath)
+	if err != nil {
+		return err
+	}
+
+	b, err := json.Marshal(planStr)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(b))
+
+	applyConfig := []tfexec.ApplyOption{
+		// tfexec.Var(fmt.Sprintf("bucket_name=%s", bucketName)),
+		tfexec.DirOrPlan(tfOutPath),
+	}
+	err = tf.Apply(context.Background(), applyConfig...)
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -4,3 +4,5 @@ Passwords.old.kdbx
 .terraform
 
 *cache*
+tf_out
+*.tfstate
