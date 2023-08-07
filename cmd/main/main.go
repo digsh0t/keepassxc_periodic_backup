@@ -50,26 +50,33 @@ func main() {
 		log.Fatalf("Failed to load the AWS SDK ERROR: %s", err)
 	}
 
-	// Get local file's MD5 hash
-	hash, err := utils.GetFileMD5Hash(path)
-	if err != nil {
-		log.Fatalf("Failed to get MD5 Hash file of backup file with ERROR: %s", err)
-	}
-	hashString := fmt.Sprintf("%x", hash.Sum(nil))
-
 	// Get S3 Client
 	bucket := s3module.BucketBasics{S3Client: s3.NewFromConfig(sdkConfig)}
 
-	// Get S3 object Etag(MD5 hash)
-	etag, err := bucket.GetFileEtag(bucketName, objectName)
+	// Check if object existed on Bucket
+	isExisted, err := bucket.KeyExists(bucketName, objectName)
 	if err != nil {
-		log.Fatalf("Failed to get file Etag with ERROR: %s", err)
+		log.Fatalf("Failed to check object on S3 bucket with ERROR: %s", err)
 	}
+	if isExisted {
+		// Get local file's MD5 hash
+		hash, err := utils.GetFileMD5Hash(path)
+		if err != nil {
+			log.Fatalf("Failed to get MD5 Hash file of backup file with ERROR: %s", err)
+		}
+		hashString := fmt.Sprintf("%x", hash.Sum(nil))
 
-	// If two hashes equal, return the program
-	if hashString == etag {
-		log.Println("Object up to date, no need to upload")
-		return
+		// Get S3 object Etag(MD5 hash)
+		etag, err := bucket.GetFileEtag(bucketName, objectName)
+		if err != nil {
+			log.Fatalf("Failed to get file Etag with ERROR: %s", err)
+		}
+
+		// If two hashes equal, return the program
+		if hashString == etag {
+			log.Println("Object up to date, no need to upload")
+			return
+		}
 	}
 
 	// Upload the local file to S3

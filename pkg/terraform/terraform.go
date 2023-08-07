@@ -49,11 +49,11 @@ func ApplyS3Bucket(bucketName string) error {
 		return err
 	}
 
-	b, err := json.Marshal(planStr)
+	_, err = json.Marshal(planStr)
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(b))
+	//fmt.Println(string(b))
 
 	applyConfig := []tfexec.ApplyOption{
 		// tfexec.Var(fmt.Sprintf("bucket_name=%s", bucketName)),
