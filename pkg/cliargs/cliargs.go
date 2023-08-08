@@ -3,6 +3,7 @@ package cliargs
 import (
 	"errors"
 	"flag"
+	"path/filepath"
 )
 
 func GetArguments() (string, string, string, error) {
@@ -18,7 +19,8 @@ func GetArguments() (string, string, string, error) {
 		return "", "", "", errors.New("bucket name should not be empty")
 	}
 	if *objectNamePointer == "" {
-		*objectNamePointer = *pathPointer
+		filename := filepath.Base(*pathPointer)
+		*objectNamePointer = filename
 	}
 	return *pathPointer, *bucketPointer, *objectNamePointer, nil
 }
