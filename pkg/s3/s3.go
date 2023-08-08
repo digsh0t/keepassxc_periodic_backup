@@ -3,6 +3,7 @@ package s3
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"strings"
@@ -12,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/smithy-go"
+	"github.com/digsh0t/keepassxc_periodic_backup/pkg/utils"
 )
 
 type BucketBasics struct {
@@ -99,4 +101,25 @@ func (bucket BucketBasics) KeyExists(bucketName string, objectKey string) (bool,
 		return false, err
 	}
 	return true, nil
+}
+
+func (bucket BucketBasics) CheckObjectUpToDate(bucketName string, objectKey string, path string) (bool, error) {
+	// Get local file's MD5 hash
+	hash, err := utils.GetFileMD5Hash(path)
+	if err != nil {
+		return false, err
+	}
+	hashString := fmt.Sprintf("%x", hash.Sum(nil))
+
+	// Get S3 object Etag(MD5 hash)
+	etag, err := bucket.GetFileEtag(bucketName, objectKey)
+	if err != nil {
+		return false, err
+	}
+
+	// If two hashes equal, return the program
+	if hashString == etag {
+		return true, nil
+	}
+	return false, nil
 }

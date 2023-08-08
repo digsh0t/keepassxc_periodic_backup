@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -10,7 +9,6 @@ import (
 	"github.com/digsh0t/keepassxc_periodic_backup/pkg/cliargs"
 	s3module "github.com/digsh0t/keepassxc_periodic_backup/pkg/s3"
 	"github.com/digsh0t/keepassxc_periodic_backup/pkg/terraform"
-	"github.com/digsh0t/keepassxc_periodic_backup/pkg/utils"
 	"github.com/digsh0t/keepassxc_periodic_backup/pkg/validate"
 )
 
@@ -59,21 +57,11 @@ func main() {
 		log.Fatalf("Failed to check object on S3 bucket with ERROR: %s", err)
 	}
 	if isExisted {
-		// Get local file's MD5 hash
-		hash, err := utils.GetFileMD5Hash(path)
+		isSame, err := bucket.CheckObjectUpToDate(bucketName, objectName, path)
 		if err != nil {
-			log.Fatalf("Failed to get MD5 Hash file of backup file with ERROR: %s", err)
+			log.Fatalf("Failed to compare version on S3 bucket with ERROR: %s", err)
 		}
-		hashString := fmt.Sprintf("%x", hash.Sum(nil))
-
-		// Get S3 object Etag(MD5 hash)
-		etag, err := bucket.GetFileEtag(bucketName, objectName)
-		if err != nil {
-			log.Fatalf("Failed to get file Etag with ERROR: %s", err)
-		}
-
-		// If two hashes equal, return the program
-		if hashString == etag {
+		if isSame {
 			log.Println("Object up to date, no need to upload")
 			return
 		}
