@@ -11,9 +11,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        org: [personal, work]
         include:
-          - snyk_token: SNYK_TOKEN_WINTLTR
-          - snyk_token: SNYK_TOKEN
+          - org: personal
+            snyk_token: SNYK_TOKEN_WINTLTR
+          - org: work
+            snyk_token: SNYK_TOKEN
     steps:
       - uses: actions/checkout@master
       - name: Run Snyk to check for vulnerabilities
