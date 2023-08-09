@@ -9,6 +9,11 @@ on:
 jobs:
   security:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - snyk_token: SNYK_TOKEN_WINTLTR
+          - snyk_token: SNYK_TOKEN
     steps:
       - uses: actions/checkout@master
       - name: Run Snyk to check for vulnerabilities
@@ -16,7 +21,7 @@ jobs:
         uses: snyk/actions/iac@master
         continue-on-error: true # To make sure that SARIF upload gets called
         env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+          SNYK_TOKEN: ${{ secrets[matrix.snyk_token] }}
         with:
           args: --sarif-file-output=snyk.sarif --severity-threshold=high --target-name=keebackup_iac --report
           command: test
