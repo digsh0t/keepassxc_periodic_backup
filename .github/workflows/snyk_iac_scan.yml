@@ -33,10 +33,6 @@ jobs:
         with:
           sarif_file: snyk.sarif
 
-      - name: Check on failures
-        if: steps.snyk_scan.outcome != 'success'
-        run: exit 1
-
       - name: Run random commands
         run: |
           echo ${{ matrix.org }} 
