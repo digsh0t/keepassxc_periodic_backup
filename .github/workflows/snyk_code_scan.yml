@@ -1,4 +1,4 @@
-name: Snyk IaC scan
+name: Snyk Code scan
 on:
   push:
     branches:

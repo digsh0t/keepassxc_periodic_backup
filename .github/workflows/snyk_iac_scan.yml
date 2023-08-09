@@ -1,10 +1,8 @@
 name: Snyk IaC scan
 on:
-  pull_request:
+  push:
     branches:
       - main
-    paths:
-      - terraform/**
 
 jobs:
   security:
