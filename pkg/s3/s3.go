@@ -21,14 +21,28 @@ type BucketBasics struct {
 
 // CreateBucket creates a bucket with the specified name in the specified Region.
 func (basics BucketBasics) CreateBucket(name string, region string) error {
-	_, err := basics.S3Client.CreateBucket(context.TODO(), &s3.CreateBucketInput{
-		Bucket: aws.String(name),
-		CreateBucketConfiguration: &types.CreateBucketConfiguration{
+	var createBucketConfiguration *types.CreateBucketConfiguration
+	if region != "us-east-1" {
+		createBucketConfiguration = &types.CreateBucketConfiguration{
 			LocationConstraint: types.BucketLocationConstraint(region),
-		},
+		}
+	} else {
+		createBucketConfiguration = nil
+	}
+	_, err := basics.S3Client.CreateBucket(context.TODO(), &s3.CreateBucketInput{
+		Bucket:                    aws.String(name),
+		CreateBucketConfiguration: createBucketConfiguration,
 	})
 	if err != nil {
 		log.Printf("Couldn't create bucket %v in Region %v. Here's why: %v\n",
+			name, region, err)
+	}
+	_, err = basics.S3Client.PutBucketVersioning(context.TODO(), &s3.PutBucketVersioningInput{
+		Bucket:                  aws.String(name),
+		VersioningConfiguration: &types.VersioningConfiguration{Status: "Enabled"},
+	})
+	if err != nil {
+		log.Printf("Couldn't turn on versioning on bucket %v in Region %v. Here's why: %v\n",
 			name, region, err)
 	}
 	return err
