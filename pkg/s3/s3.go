@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/smithy-go"
@@ -20,18 +19,25 @@ type BucketBasics struct {
 	S3Client *s3.Client
 }
 
-func GetBucket(bucketName string) (bool, error) {
-	// Load the Shared AWS Configuration (~/.aws/config)
-	cfg, err := config.LoadDefaultConfig(context.TODO())
+// CreateBucket creates a bucket with the specified name in the specified Region.
+func (basics BucketBasics) CreateBucket(name string, region string) error {
+	_, err := basics.S3Client.CreateBucket(context.TODO(), &s3.CreateBucketInput{
+		Bucket: aws.String(name),
+		CreateBucketConfiguration: &types.CreateBucketConfiguration{
+			LocationConstraint: types.BucketLocationConstraint(region),
+		},
+	})
 	if err != nil {
-		return false, err
+		log.Printf("Couldn't create bucket %v in Region %v. Here's why: %v\n",
+			name, region, err)
 	}
+	return err
+}
 
-	// Create an Amazon S3 service client
-	client := s3.NewFromConfig(cfg)
+func (s3client BucketBasics) GetBucket(bucketName string) (bool, error) {
 
 	// Get the first page of results for ListObjectsV2 for a bucket
-	_, err = client.HeadBucket(context.TODO(), &s3.HeadBucketInput{
+	_, err := s3client.S3Client.HeadBucket(context.TODO(), &s3.HeadBucketInput{
 		Bucket: aws.String(bucketName),
 	})
 	exists := true
